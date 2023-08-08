@@ -1,13 +1,14 @@
-package com.graduation.backend_properties.repository;
+package com.graduation.backend_properties.controller;
 
 import com.graduation.backend_properties.modele.User;
+import com.graduation.backend_properties.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/${api-version}/user")
 public class Usercontroller {
     private final UserRepository userRepository;
 

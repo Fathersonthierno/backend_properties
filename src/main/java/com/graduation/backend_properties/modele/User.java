@@ -1,15 +1,11 @@
 package com.graduation.backend_properties.modele;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.graduation.backend_properties.token.Token;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.persistence.*;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Date;
@@ -30,6 +26,7 @@ public class User implements UserDetails {
 
     protected String nom;
     protected String prenom;
+    protected String username;
     protected Date dateNaissance;
 
     @ManyToOne
@@ -43,11 +40,9 @@ public class User implements UserDetails {
     protected String ville;
     protected String contacturgence;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     private Role role ;
-
-    @OneToMany(mappedBy = "user")
-    private List<Token> tokens;
     
 
     @OneToOne(mappedBy = "user")
@@ -182,6 +177,14 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
 

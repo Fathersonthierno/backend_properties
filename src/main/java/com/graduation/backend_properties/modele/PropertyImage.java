@@ -1,12 +1,8 @@
 package com.graduation.backend_properties.modele;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.Type;
 
-import jakarta.persistence.*;
-
+import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;

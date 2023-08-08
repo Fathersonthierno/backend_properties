@@ -1,13 +1,7 @@
 package com.graduation.backend_properties;
 
-import com.graduation.backend_properties.auth.AuthenticationService;
-import com.graduation.backend_properties.auth.RegisterRequest;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-
-import static com.graduation.backend_properties.modele.Role.*;
 
 @SpringBootApplication
 public class BackendPropertiesApplication {
@@ -16,8 +10,8 @@ public class BackendPropertiesApplication {
 		SpringApplication.run(BackendPropertiesApplication.class, args);
 	}
 
-	@Bean
-	public CommandLineRunner commandLineRunner(
+	//@Bean
+	/*public CommandLineRunner commandLineRunner(
 			AuthenticationService service
 	) {
 		return args -> {
@@ -43,5 +37,5 @@ public class BackendPropertiesApplication {
 
 		};
 
-	}
+	}*/
 }

@@ -1,11 +1,11 @@
 package com.graduation.backend_properties.modele;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;

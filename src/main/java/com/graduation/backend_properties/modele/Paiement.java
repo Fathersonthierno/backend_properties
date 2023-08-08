@@ -1,14 +1,11 @@
 package com.graduation.backend_properties.modele;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 
+import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
-
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table

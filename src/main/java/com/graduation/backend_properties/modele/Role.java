@@ -4,26 +4,19 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-//import java.security.Permission;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.graduation.backend_properties.modele.Permission.ADMIN_DELETE;
-import static com.graduation.backend_properties.modele.Permission.ADMIN_READ;
-import static com.graduation.backend_properties.modele.Permission.ADMIN_CREATE;
-import static com.graduation.backend_properties.modele.Permission.ADMIN_UPDATE;
-import static com.graduation.backend_properties.modele.Permission.MANAGER_UPDATE;
-import static com.graduation.backend_properties.modele.Permission.MANAGER_CREATE;
-import static com.graduation.backend_properties.modele.Permission.MANAGER_DELETE;
-import static com.graduation.backend_properties.modele.Permission.MANAGER_READ;
+import static com.graduation.backend_properties.modele.Permission.*;
 
 @RequiredArgsConstructor
 public enum Role {
     User(Collections.emptySet()),
     ANNONCEUR(
             Set.of(
+                    ROLE_ANNONCEUR,
                     ADMIN_READ,
                     ADMIN_UPDATE,
                     ADMIN_DELETE,
@@ -36,6 +29,7 @@ public enum Role {
     ),
     ACHETEUR(
             Set.of(
+                    ROLE_ACHETEUR,
                     MANAGER_READ,
                     MANAGER_UPDATE,
                     MANAGER_DELETE,

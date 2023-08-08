@@ -1,22 +1,30 @@
-package com.graduation.backend_properties.repository;
+package com.graduation.backend_properties.controller;
 
 import com.graduation.backend_properties.modele.Property;
 import com.graduation.backend_properties.modele.PropertyOwner;
+import com.graduation.backend_properties.modele.User;
+import com.graduation.backend_properties.repository.PropertyRepository;
+import com.graduation.backend_properties.repository.PropertyownerRepository;
+import com.graduation.backend_properties.repository.UnauthorizedAccessException;
+import com.graduation.backend_properties.repository.UserRepository;
+import com.graduation.backend_properties.utils.UserUtilsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/owner")
+@RequestMapping("/api/${api-version}/owner")
 public class Propertyownercontroller {
     private final PropertyownerRepository propertyownerRepository;
     private final PropertyRepository propertyRepository;
+    private final UserRepository userRepository;
 
 
-    public Propertyownercontroller(PropertyownerRepository propertyownerRepository, PropertyRepository propertyRepository) {
+    public Propertyownercontroller(PropertyownerRepository propertyownerRepository, PropertyRepository propertyRepository, UserRepository userRepository) {
         this.propertyownerRepository = propertyownerRepository;
         this.propertyRepository = propertyRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -31,20 +39,16 @@ public class Propertyownercontroller {
         return propertyownerRepository.save(propertyOwner);
     }
     @PostMapping("/properties")
-    public Property addPropertyToOwner(@RequestBody Property property) {
-//        PropertyOwner owner = propertyownerRepository.findById(ownerId)
-//                .orElseThrow(() -> new IllegalArgumentException("Propriétaire non trouvé"));
+    public ResponseEntity<Property> addPropertyToOwner(@RequestBody Property property) {
 //
-//        if (!owner.isAuthorizedToAddProperty()) {
-//            throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à ajouter un bien immobilier");
-//        }
-
-        property.setOwner(null);
-
+        User user = UserUtilsService.getAuthenticatedUser(userRepository);
+        if (user != null) {
+            property.setOwner(user.getOwner());
+        } else {
+            property.setOwner(null);
+        }
         propertyRepository.save(property);
-//        propertyownerRepository.save(owner);
-
-        return property;
+        return ResponseEntity.ok(property);
     }
 
     @DeleteMapping("/properties/{propertyId}")

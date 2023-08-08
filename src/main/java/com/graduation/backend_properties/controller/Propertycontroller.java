@@ -1,15 +1,17 @@
-package com.graduation.backend_properties.repository;
+package com.graduation.backend_properties.controller;
 
 import com.graduation.backend_properties.modele.Property;
-import com.graduation.backend_properties.modele.PropertyOwner;
-import com.graduation.backend_properties.modele.PropertyOwner;
+import com.graduation.backend_properties.repository.PropertyRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/property")
+@RequestMapping("/api/${api-version}/property")
 public class Propertycontroller {
     private PropertyRepository propertyRepository;
 
@@ -18,9 +20,10 @@ public class Propertycontroller {
     }
 
     @GetMapping
-    public List<Property> findAllProperties(Property property) {
-
-        return propertyRepository.findAll();
+    public ResponseEntity<List<Property>>  findAllProperties() {
+        List<Property> list = propertyRepository.findAll();
+        URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/property").toUriString());
+        return ResponseEntity.created(uri).body(list);
     }
 
     @GetMapping("/id")
