@@ -1,41 +1,43 @@
 package com.graduation.backend_properties.auth ;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.graduation.backend_properties.config.JwtService;
 import com.graduation.backend_properties.modele.PropertyOwner;
 import com.graduation.backend_properties.modele.Role;
 import com.graduation.backend_properties.modele.User;
 import com.graduation.backend_properties.repository.PropertyownerRepository;
 import com.graduation.backend_properties.repository.UserRepository;
-import com.graduation.backend_properties.token.Token;
-import com.graduation.backend_properties.token.TokenRepository;
-import com.graduation.backend_properties.token.TokenType;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.graduation.backend_properties.utils.GeneratorType;
+import com.graduation.backend_properties.utils.MyGenerator;
+import com.graduation.backend_properties.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+
+public class AuthenticationService implements UserDetailsService {
   private final UserRepository repository;
   private final PropertyownerRepository propertyownerRepository;
-  private final TokenRepository tokenRepository;
   private final PasswordEncoder passwordEncoder;
-  private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
+  private final UserRepository userRepository;
 
-  public com.graduation.backend_properties.auth.AuthenticationResponse register(RegisterRequest request) {
+  public com.graduation.backend_properties.auth.AuthenticationResponse register(RegisterRequest request, MyGenerator generator) {
     var user = User.builder()
         .prenom(request.getFirstname())
         .nom(request.getLastname())
         .email(request.getEmail())
+        .username(request.getEmail())
         .password(passwordEncoder.encode(request.getPassword()))
         .role(request.getTypeUtilisateur().equals("Annonceur")? Role.ANNONCEUR : Role.ACHETEUR)
         .build();
@@ -44,88 +46,31 @@ public class AuthenticationService {
 
     if (request.getTypeUtilisateur().equals("Annonceur")){
       PropertyOwner propertyOwner = PropertyOwner.builder()
-              .code("0001")
+              .code(generator.generateAlphaNumericStringFromData(4, GeneratorType.NUMERIC))
               .nbbien(0)
               .user(user)
               .build();
       propertyownerRepository.save(propertyOwner);
     }
-
-    var jwtToken = jwtService.generateToken(user);
-    var refreshToken = jwtService.generateRefreshToken(user);
-    saveUserToken(savedUser, jwtToken);
+    Map<String, String> tokens = TokenUtils.generateTokensMap(user, "PROPERTY APP");
     return com.graduation.backend_properties.auth.AuthenticationResponse.builder()
-        .accessToken(jwtToken)
-            .refreshToken(refreshToken)
-        .build();
+            .accessToken(tokens.get("access_token"))
+            .refreshToken(tokens.get("refresh_token"))
+            .build();
   }
 
-  public com.graduation.backend_properties.auth.AuthenticationResponse authenticate(AuthenticationRequest request) {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(
-            request.getEmail(),
-            request.getPassword()
-        )
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    Optional<User> userOptional = userRepository.findByEmail(username);
+    if (userOptional.isEmpty()) {
+      throw new UsernameNotFoundException("User not found in the database");
+    }
+      User user = userOptional.get();
+      Collection<SimpleGrantedAuthority> authorities = new ArrayList<>(user.getRole().getAuthorities());
+    return new org.springframework.security.core.userdetails.User(
+            user.getEmail(),
+            user.getPassword(),
+            authorities
     );
-    var user = repository.findByEmail(request.getEmail())
-        .orElseThrow();
-    var jwtToken = jwtService.generateToken(user);
-    var refreshToken = jwtService.generateRefreshToken(user);
-    revokeAllUserTokens(user);
-    saveUserToken(user, jwtToken);
-    return com.graduation.backend_properties.auth.AuthenticationResponse.builder()
-        .accessToken(jwtToken)
-            .refreshToken(refreshToken)
-        .build();
-  }
-
-  private void saveUserToken(User user, String jwtToken) {
-    var token = Token.builder()
-        .user(user)
-        .token(jwtToken)
-        .tokenType(TokenType.BEARER)
-        .expired(false)
-        .revoked(false)
-        .build();
-    tokenRepository.save(token);
-  }
-
-  private void revokeAllUserTokens(User user) {
-    var validUserTokens = tokenRepository.findAllValidTokenByUser((user.getId()));
-    if (validUserTokens.isEmpty())
-      return;
-    validUserTokens.forEach(token -> {
-      token.setExpired(true);
-      token.setRevoked(true);
-    });
-    tokenRepository.saveAll(validUserTokens);
-  }
-
-  public void refreshToken(
-          HttpServletRequest request,
-          HttpServletResponse response
-  ) throws IOException {
-    final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-    final String refreshToken;
-    final String userEmail;
-    if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-      return;
-    }
-    refreshToken = authHeader.substring(7);
-    userEmail = jwtService.extractUsername(refreshToken);
-    if (userEmail != null) {
-      var user = this.repository.findByEmail(userEmail)
-              .orElseThrow();
-      if (jwtService.isTokenValid(refreshToken, user)) {
-        var accessToken = jwtService.generateToken(user);
-        revokeAllUserTokens(user);
-        saveUserToken(user, accessToken);
-        var authResponse = com.graduation.backend_properties.auth.AuthenticationResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-        new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-      }
-    }
   }
 }
